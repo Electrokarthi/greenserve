@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GreenServe — Plant. Serve. Grow.</title>
+  <meta name="description" content="GreenServe — Volunteers & Plantation Tracker. Register, join activities, upload geo-tagged photos and get certificates." />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <!-- html2canvas + jsPDF for certificate generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root{
+      --green:#2E7D32;--light-green:#A5D6A7;--dark-green:#1B5E20;--muted:#6b7280;--radius:12px;
+      --maxw:1000px; font-family: 'Poppins',system-ui,Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#f7fff7 0%, #ffffff 100%);color:#0f172a}
+    .container{max-width:var(--maxw);margin:28px auto;padding:20px}
+    header{display:flex;align-items:center;gap:18px}
+    .logo{width:56px;height:56px;border-radius:10px;background:var(--light-green);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark-green)}
+    h1{margin:0;font-size:20px}
+    nav{margin-left:auto}
+    nav a{margin-left:12px;text-decoration:none;color:var(--muted);font-weight:600}
+    .grid{display:grid;gap:16px}
+    .card{background:white;padding:16px;border-radius:var(--radius);box-shadow:0 6px 18px rgba(15,23,42,0.06)}
+    .tiles{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));}
+    .tile{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+    .btn{background:var(--green);color:white;padding:10px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:600}
+    .btn.ghost{background:transparent;color:var(--green);border:2px solid var(--light-green)}
+    form label{display:block;font-size:13px;color:var(--muted);margin-top:8px}
+    input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #e6eaf0;margin-top:6px}
+    .flex{display:flex;gap:12px;align-items:center}
+    footer{margin-top:24px;text-align:center;color:var(--muted);font-size:13px}
+    /* Activity list */
+    .activity{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .small{font-size:13px;color:var(--muted)}
+    /* Camera */
+    #video{width:100%;max-height:360px;border-radius:10px;background:#111}
+    .thumb{width:120px;height:80px;object-fit:cover;border-radius:8px}
+    /* responsive */
+    @media(min-width:900px){header h1{font-size:22px}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">GS</div>
+      <div>
+        <h1>GreenServe — Plant. Serve. Grow.</h1>
+        <div class="small">Volunteer-led plantation tracker with geo-tagged proof & certificates</div>
+      </div>
+      <nav>
+        <a href="#home">Home</a>
+        <a href="#activities">Activities</a>
+        <a href="#camera">Upload Photo</a>
+        <a href="#certs">Certificates</a>
+        <a href="#admin">Admin</a>
+      </nav>
+    </header>
+
+    <!-- HERO -->
+    <section id="home" class="grid" style="margin-top:18px;grid-template-columns:1fr 320px;gap:18px">
+      <div class="card">
+        <h2 style="margin-top:0">Welcome to GreenServe</h2>
+        <p class="small">Register as a volunteer, join local plantation activities, capture geo-tagged photos after planting and receive a verified certificate once approved.</p>
+
+        <div style="margin-top:12px" class="tiles grid">
+          <div class="card tile">
+            <div style="font-size:18px">🌱 Create or Join Activities</div>
+            <div class="small">Find nearby plantation events and join with a tap.</div>
+          </div>
+          <div class="card tile">
+            <div style="font-size:18px">📸 Geo-tagged Photos</div>
+            <div class="small">Capture photos using the in-app camera with GPS metadata.</div>
+          </div>
+          <div class="card tile">
+            <div style="font-size:18px">🎓 Digital Certificates</div>
+            <div class="small">Get an auto-generated PDF certificate after verification.</div>
+          </div>
+        </div>
+
+        <hr style="margin:16px 0;border:none;border-top:1px solid #f0f2f5"> 
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <button class="btn" onclick="scrollToSection('activities')">Browse Activities</button>
+          <button class="btn ghost" onclick="scrollToSection('camera')">Upload Photo</button>
+          <button class="btn ghost" onclick="scrollToSection('register')">Register Now</button>
+        </div>
+      </div>
+
+      <aside class="card">
+        <h3 style="margin:0 0 8px 0">Quick Stats</h3>
+        <div class="small">Total Volunteers: <strong id="stat-vol">0</strong></div>
+        <div class="small">Active Activities: <strong id="stat-act">0</strong></div>
+        <div class="small">Photos Uploaded: <strong id="stat-photos">0</strong></div>
+        <hr style="margin:12px 0;border:none;border-top:1px solid #f0f2f5"> 
+        <div>
+          <h4 style="margin:0 0 6px 0">Join our newsletter</h4>
+          <input id="news-email" placeholder="Your email" />
+          <button class="btn" style="margin-top:8px" onclick="subscribe()">Subscribe</button>
+        </div>
+      </aside>
+    </section>
+
+    <!-- Activities -->
+    <section id="activities" style="margin-top:18px">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h3 style="margin:0">Activities</h3>
+          <div>
+            <button class="btn" onclick="showCreateActivity()">+ Create Activity</button>
+          </div>
+        </div>
+        <p class="small">Tap an activity to see details and join.</p>
+        <div id="activity-list" style="margin-top:12px;display:grid;gap:10px"></div>
+      </div>
+    </section>
+
+    <!-- Camera / Upload -->
+    <section id="camera" style="margin-top:18px">
+      <div class="card">
+        <h3 style="margin:0 0 6px 0">Geo-Tag Camera</h3>
+        <p class="small">Use the camera below to capture the planted sapling. Make sure GPS is enabled and you allow camera access.</p>
+        <div id="camera-area">
+          <video id="video" autoplay playsinline></video>
+          <canvas id="canvas" style="display:none"></canvas>
+          <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <button class="btn" id="captureBtn">Capture</button>
+            <button class="btn ghost" id="retakeBtn" style="display:none">Retake</button>
+            <select id="select-activity"></select>
+            <button class="btn" id="uploadBtn" style="display:none">Submit for Verification</button>
+          </div>
+          <div id="preview" style="margin-top:12px;display:flex;gap:12px;align-items:center"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Register -->
+    <section id="register" style="margin-top:18px">
+      <div class="card">
+        <h3 style="margin:0 0 6px 0">Volunteer Registration</h3>
+        <p class="small">Create a simple volunteer profile (stored locally for demo).</p>
+        <form id="regForm" onsubmit="event.preventDefault();registerVolunteer();">
+          <label>Name</label>
+          <input id="vname" required />
+          <label>Phone</label>
+          <input id="vphone" required />
+          <label>Email</label>
+          <input id="vemail" />
+          <label>District / Location</label>
+          <input id="vdist" />
+          <div style="margin-top:12px">
+            <button class="btn">Register</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Certificates -->
+    <section id="certs" style="margin-top:18px">
+      <div class="card">
+        <h3 style="margin:0 0 6px 0">Certificates</h3>
+        <p class="small">Approved submissions will appear here. Click to download.</p>
+        <div id="cert-list" style="margin-top:10px;display:grid;gap:8px"></div>
+      </div>
+    </section>
+
+    <!-- Admin (client-side demo) -->
+    <section id="admin" style="margin-top:18px">
+      <div class="card">
+        <h3 style="margin:0 0 6px 0">Admin Panel (Demo)</h3>
+        <p class="small">This example includes a simple client-side admin view to approve/reject uploads for demo purposes.</p>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="admin-pass" placeholder="Enter admin key" />
+          <button class="btn" onclick="adminLogin()">Enter</button>
+        </div>
+        <div id="admin-area" style="margin-top:12px;display:none">
+          <h4>Pending Submissions</h4>
+          <div id="pending-list" style="display:grid;gap:8px"></div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      Built with ❤️ for volunteers • Demo single-file website. Want React/Flutter export? Ask me.
+    </footer>
+  </div>
+
+  <script>
+    // Simple local-storage backed demo app
+    const LS_KEYS = {VOL:'gs_vols',ACT:'gs_acts',PH:'gs_photos',NEWS:'gs_news'};
+
+    // helper: get storage
+    function sget(k,def){const v=localStorage.getItem(k);return v?JSON.parse(v):def}
+    function sset(k,v){localStorage.setItem(k,JSON.stringify(v))}
+
+    // seed default activities if none
+    function seed(){
+      let acts = sget(LS_KEYS.ACT, null);
+      if(!acts){
+        acts = [
+          {id:'act1',title:'Riverbank Tree Plantation',date:'2025-12-05',location:'Ramanathapuram',need:30,desc:'Plant native saplings along the riverbank.'},
+          {id:'act2',title:'School Compound Greening',date:'2025-12-12',location:'Madurai',need:50,desc:'Greening a local school compound.'}
+        ];
+        sset(LS_KEYS.ACT,acts)
+      }
+      renderActivities();
+      updateStats();
+    }
+
+    function renderActivities(){
+      const list = document.getElementById('activity-list'); list.innerHTML='';
+      const acts = sget(LS_KEYS.ACT,[]);
+      const select = document.getElementById('select-activity'); select.innerHTML='';
+      acts.forEach(a=>{
+        const el = document.createElement('div'); el.className='card activity';
+        el.innerHTML = `<div><strong>${a.title}</strong><div class='small'>${a.date} • ${a.location}</div></div>
+                        <div style='display:flex;gap:8px;align-items:center'>
+                          <button class='btn ghost' onclick="viewActivity('${a.id}')">View</button>
+                          <button class='btn' onclick="joinActivity('${a.id}')">Join</button>
+                        </div>`;
+        list.appendChild(el);
+        const opt = document.createElement('option'); opt.value=a.id; opt.textContent = a.title+' — '+a.location; select.appendChild(opt);
+      })
+      document.getElementById('stat-act').textContent = acts.length
+    }
+
+    function viewActivity(id){
+      const acts = sget(LS_KEYS.ACT,[]); const a = acts.find(x=>x.id==id);
+      alert(a.title+'\n\n'+a.desc+'\n\nDate: '+a.date+'\nLocation: '+a.location)
+    }
+
+    function joinActivity(id){
+      const vols = sget(LS_KEYS.VOL,[]); if(vols.length===0){if(!confirm('No volunteer registered yet. Register now?')) return; scrollToSection('register'); return}
+      const name = vols[0].name; // simple demo: first volunteer
+      alert(name+' joined the activity. (Demo)')
+    }
+
+    function showCreateActivity(){
+      const title = prompt('Activity title'); if(!title) return;
+      const date = prompt('Date (YYYY-MM-DD)'); const loc = prompt('Location');
+      const acts = sget(LS_KEYS.ACT,[]); const id = 'act'+Date.now(); acts.push({id,title,date,location:loc,need:20,desc:'Created by admin via web demo.'}); sset(LS_KEYS.ACT,acts); renderActivities();
+    }
+
+    function registerVolunteer(){
+      const name = document.getElementById('vname').value.trim(); const phone = document.getElementById('vphone').value.trim();
+      if(!name||!phone){alert('Name and phone required');return}
+      const v = {id:'v'+Date.now(),name,phone,email:document.getElementById('vemail').value,dist:document.getElementById('vdist').value}
+      const vols = sget(LS_KEYS.VOL,[]); vols.unshift(v); sset(LS_KEYS.VOL,vols); alert('Registered — '+name); updateStats();
+    }
+
+    function updateStats(){
+      document.getElementById('stat-vol').textContent = sget(LS_KEYS.VOL,[]).length;
+      document.getElementById('stat-photos').textContent = sget(LS_KEYS.PH,[]).length;
+    }
+
+    function scrollToSection(id){document.getElementById(id).scrollIntoView({behavior:'smooth'})}
+
+    // Newsletter
+    function subscribe(){const e=document.getElementById('news-email').value; if(!e){alert('Enter email')} else{const n=sget(LS_KEYS.NEWS,[]); n.push(e); sset(LS_KEYS.NEWS,n); alert('Subscribed: '+e)}}
+
+    // Camera + geotag
+    const video = document.getElementById('video'); const canvas = document.getElementById('canvas'); const captureBtn = document.getElementById('captureBtn');
+    const retakeBtn = document.getElementById('retakeBtn'); const uploadBtn = document.getElementById('uploadBtn'); const preview = document.getElementById('preview');
+
+    async function startCamera(){
+      try{const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}); video.srcObject = stream}catch(e){console.warn('Camera failed',e);video.style.display='none';}
+    }
+    startCamera();
+
+    let lastBlob=null; let lastCoords=null; let lastTimestamp=null;
+
+    captureBtn.addEventListener('click',async()=>{
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight; const ctx = canvas.getContext('2d'); ctx.drawImage(video,0,0);
+      canvas.toBlob((blob)=>{ lastBlob = blob; showPreview(); }, 'image/jpeg', 0.9);
+      lastTimestamp = new Date().toISOString();
+      if(navigator.geolocation){navigator.geolocation.getCurrentPosition((pos)=>{lastCoords = pos.coords; console.log('coords',pos.coords)},(err)=>{console.warn('geo fail',err)})}
+      captureBtn.style.display='none'; retakeBtn.style.display='inline-block'; uploadBtn.style.display='inline-block';
+    })
+
+    retakeBtn.addEventListener('click',()=>{lastBlob=null;lastCoords=null;preview.innerHTML='';captureBtn.style.display='inline-block';retakeBtn.style.display='none';uploadBtn.style.display='none'})
+
+    function showPreview(){preview.innerHTML=''; if(!lastBlob) return; const url = URL.createObjectURL(lastBlob); const img = document.createElement('img'); img.src=url; img.className='thumb'; preview.appendChild(img);
+      const meta = document.createElement('div'); meta.innerHTML = `<div class='small'>Captured: ${new Date(lastTimestamp).toLocaleString()}</div><div class='small'>Coords: ${lastCoords? (lastCoords.latitude.toFixed(6)+', '+lastCoords.longitude.toFixed(6)) : 'No GPS yet'}</div>`; preview.appendChild(meta);
+    }
+
+    // Upload (store as pending)
+    uploadBtn.addEventListener('click',async()=>{
+      if(!lastBlob){alert('Take a photo first');return}
+      const acts = sget(LS_KEYS.ACT,[]); const aid = document.getElementById('select-activity').value || (acts[0] && acts[0].id);
+      const vols = sget(LS_KEYS.VOL,[]); if(vols.length===0){alert('Register as volunteer first');scrollToSection('register');return}
+      const reader = new FileReader(); reader.onload = function(){
+        const dataURL = reader.result; const photos = sget(LS_KEYS.PH,[]);
+        const obj = {id:'p'+Date.now(),volId:vols[0].id,volName:vols[0].name,activityId:aid,photo:dataURL,coords:lastCoords,timestamp:lastTimestamp,status:'pending'};
+        photos.unshift(obj); sset(LS_KEYS.PH,photos); alert('Uploaded — pending verification'); lastBlob=null; lastCoords=null; preview.innerHTML=''; captureBtn.style.display='inline-block'; retakeBtn.style.display='none'; uploadBtn.style.display='none'; renderPending(); updateStats();
+      }
+      reader.readAsDataURL(lastBlob);
+    })
+
+    // Admin demo
+    function adminLogin(){const v=document.getElementById('admin-pass').value; if(v==='admin123'){document.getElementById('admin-area').style.display='block'; renderPending()} else alert('Wrong admin key (demo)')}
+    function renderPending(){const list = document.getElementById('pending-list'); list.innerHTML=''; const photos = sget(LS_KEYS.PH,[]); const pending = photos.filter(p=>p.status==='pending'); pending.forEach(p=>{
+      const el = document.createElement('div'); el.className='card'; el.innerHTML = `<div style='display:flex;gap:12px;align-items:center'>
+        <img src='${p.photo}' style='width:140px;height:90px;object-fit:cover;border-radius:8px' />
+        <div style='flex:1'>
+          <div><strong>${p.volName}</strong> — ${p.timestamp? new Date(p.timestamp).toLocaleString() : ''}</div>
+          <div class='small'>Coords: ${p.coords? (p.coords.latitude.toFixed(6)+', '+p.coords.longitude.toFixed(6)) : 'N/A'}</div>
+          <div style='margin-top:8px'><button class='btn' onclick="approvePhoto('${p.id}')">Approve</button> <button class='btn ghost' onclick="rejectPhoto('${p.id}')">Reject</button></div>
+        </div></div>`;
+      list.appendChild(el);
+    })
+
+      // populate cert list too
+      renderCertificates();
+    }
+
+    function approvePhoto(id){const photos = sget(LS_KEYS.PH,[]); const p = photos.find(x=>x.id===id); if(!p) return; p.status='approved'; p.approvedAt = new Date().toISOString(); sset(LS_KEYS.PH,photos); alert('Approved'); renderPending(); renderCertificates(); updateStats();}
+    function rejectPhoto(id){const photos = sget(LS_KEYS.PH,[]); const p = photos.find(x=>x.id===id); if(!p) return; p.status='rejected'; sset(LS_KEYS.PH,photos); alert('Rejected'); renderPending(); updateStats();}
+
+    // Certificates generation & listing
+    function renderCertificates(){const list = document.getElementById('cert-list'); list.innerHTML=''; const photos = sget(LS_KEYS.PH,[]); const approved = photos.filter(p=>p.status==='approved'); approved.forEach(p=>{
+      const el = document.createElement('div'); el.className='card activity';
+      el.innerHTML = `<div><strong>${p.volName}</strong><div class='small'>Activity: ${getActivityTitle(p.activityId)} • ${new Date(p.approvedAt).toLocaleDateString()}</div></div>
+                      <div style='display:flex;gap:8px;align-items:center'><button class='btn' onclick="downloadCertificate('${p.id}')">Download</button></div>`;
+      list.appendChild(el);
+    })
+    }
+
+    function getActivityTitle(id){const acts=sget(LS_KEYS.ACT,[]); const a=acts.find(x=>x.id==id); return a? a.title : 'Activity'
+    }
+
+    async function downloadCertificate(id){const photos = sget(LS_KEYS.PH,[]); const p = photos.find(x=>x.id===id); if(!p) return; // build a simple certificate DOM
+      const cert = document.createElement('div'); cert.style.width='800px'; cert.style.padding='40px'; cert.style.background='white'; cert.style.borderRadius='8px'; cert.style.fontFamily='Poppins,Arial';
+      cert.innerHTML = `
+        <div style='text-align:center'>
+          <h1 style='color:var(--green)'>Certificate of Participation</h1>
+          <p class='small'>This is to certify that</p>
+          <h2 style='margin:6px 0'>${p.volName}</h2>
+          <p class='small'>has actively participated in <strong>${getActivityTitle(p.activityId)}</strong> and planted a sapling at coordinates:</p>
+          <p class='small'>${p.coords? (p.coords.latitude.toFixed(6)+', '+p.coords.longitude.toFixed(6)) : 'N/A'}</p>
+          <div style='margin-top:12px'><img src='${p.photo}' style='width:320px;height:200px;object-fit:cover;border-radius:8px' /></div>
+          <div style='display:flex;justify-content:space-between;margin-top:24px;align-items:center'>
+            <div style='text-align:left'>
+              <div class='small'>Date: ${new Date(p.approvedAt).toLocaleDateString()}</div>
+              <div class='small'>Verified by: GreenServe</div>
+            </div>
+            <div style='text-align:right'>
+              <div style='height:70px;width:180px;border-top:2px solid #111;display:flex;align-items:flex-end;justify-content:center'>Signature</div>
+            </div>
+          </div>
+        </div>`;
+
+      document.body.appendChild(cert);
+      // use html2canvas + jsPDF
+      const canvas = await html2canvas(cert, {scale:2});
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({unit:'px',format:[canvas.width,canvas.height]});
+      pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+      pdf.save(`${p.volName.replace(/\s+/g,'_')}_certificate.pdf`);
+      document.body.removeChild(cert);
+    }
+
+    // init
+    seed();
+
+    // render pending for admin if already logged in
+    // Also populate select in camera
+    window.addEventListener('load',()=>{
+      const acts = sget(LS_KEYS.ACT,[]); const sel = document.getElementById('select-activity'); sel.innerHTML=''; acts.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=a.title;sel.appendChild(o)})
+      renderCertificates();
+    })
+  </script>
+</body>
+</html>
